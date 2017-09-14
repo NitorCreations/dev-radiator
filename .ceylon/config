@@ -1,0 +1,14 @@
+
+[compiler]
+source=source
+resource=resource
+
+[defaults]
+offline=false
+flatclasspath=false
+autoexportmavendependencies=true
+fullyexportmavendependencies=false
+overrides=overrides.xml
+
+[repositories]
+remote=maven:/home/xkr47/nitor/apache-maven/apache-maven/conf/settings.xml
