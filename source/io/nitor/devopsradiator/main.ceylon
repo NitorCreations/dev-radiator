@@ -156,6 +156,12 @@ shared class MyVerticle() extends AbstractVerticle() {
             }
         });
 
+        listen(router);
+
+        log.info("Startup initialized.");
+    }
+
+    void listen(Router router) {
         vertx.createHttpServer(HttpServerOptions()
         // .setHandle100ContinueAutomatically(false)
             .setReuseAddress(true)
@@ -173,7 +179,5 @@ shared class MyVerticle() extends AbstractVerticle() {
                 }
             }
         });
-
-        log.info("Startup initialized.");
     }
 }
