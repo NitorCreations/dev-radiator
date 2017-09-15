@@ -132,44 +132,19 @@ shared class MyVerticle() extends AbstractVerticle() {
     shared actual void start() {
         log.info("Verticle starting..");
 
-        value client = vertx.createHttpClient(HttpClientOptions()
-            .setConnectTimeout(10)
-            .setIdleTimeout(120)
-            .setMaxPoolSize(1000)
-            .setPipelining(false)
-            .setPipeliningLimit(1)
-            .setMaxWaitQueueSize(20)
-            .setUsePooledBuffers(true)
-            .setProtocolVersion(HttpVersion.http11)
-            .setTryUseCompression(false)
-        );
-
         value router = Router.router(vertx);
 
         router.route().handler(object satisfies Handler<RoutingContext> {
-            shared actual void handle(RoutingContext event) {
-                log.info("Got requst ``event```");
-            }
-        });
-        router.route().failureHandler(object satisfies Handler<RoutingContext> {
-            shared actual void handle(RoutingContext routingContext) {
-                if (routingContext.failed()) {
-                    if (!routingContext.response().headWritten()) {
-                        value statusMsg = "Bah";
-                        routingContext.response().setStatusCode(500);
-                        routingContext.response().headers().set("content-type", "text/plain;charset=UTF-8");
-                        routingContext.response().end(statusMsg);
-                    }
-                } else {
-                    routingContext.next();
-                }
+            shared actual void handle(RoutingContext ctx) {
+                log.info("Got requst ``ctx```");
+                ctx.response().end("Yeah");
             }
         });
 
         vertx.createHttpServer(HttpServerOptions()
         // .setHandle100ContinueAutomatically(false)
             .setReuseAddress(true)
-            .setCompressionSupported(false) // otherwise it automatically compresses based on response headers even if pre-compressed with e.g. proxy
+            .setCompressionSupported(true)
             .setUsePooledBuffers(true)
             .setIdleTimeout(serverIdleTimeout)
         )
