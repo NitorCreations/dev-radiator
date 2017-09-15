@@ -1,4 +1,58 @@
 .App {
-    background: white;
+    background: gray;
     color: black;
+}
+
+p,div {
+    margin: 0;
+    padding: 0;
+}
+
+.signal {
+    padding: 5px;
+    background: white;
+    text: black;
+    position: relative;
+}
+
+.signal-label {
+    position: relative;
+    top: -5px;
+    left: 3px;
+}
+
+.signal-green, .signal-red, .signal-unknown {
+    width: 0;
+    height: 0;
+    padding: 0;
+    border-radius: 10px;
+    display: inline-block;
+    text-align: top;
+}
+
+.signal-green {
+    border: solid green 10px;
+}
+
+.signal-red {
+    border: solid red 10px;
+}
+
+.signal-unknown {
+    border: solid grey 10px;
+}
+
+.onhover {
+    display: none;
+    position: absolute;
+    left: 20px;
+    top: 10px;
+    border: 1px solid black;
+    padding: 2px;
+    background: rgba(200,200,200,0.8);
+    z-index: 1;
+}
+
+*:hover > .onhover {
+    display: block;
 }

@@ -17,6 +17,11 @@ import com.julienviet.childprocess {
     Process
 }
 
+import io.nitor.api.backend.proxy {
+    Proxy,
+    DevNullProxyTracer,
+    ProxyTracer
+}
 import io.vertx.core {
     ...
 }
@@ -39,21 +44,19 @@ import java.util {
     JList=List,
     JArrayList=ArrayList
 }
-import io.vertx.ext.web.handler {
-    StaticHandler
-}
 import java.util.\ifunction {
     Supplier
-}
-import io.nitor.api.backend.proxy {
-    Proxy,
-    DevNullProxyTracer,
-    ProxyTracer
 }
 
 JList<JString> splitargs(String s) {
     value l = JArrayList<JString>();
     s.split().each((String arg) => l.add(JString(arg)));
+    return l;
+}
+
+JList<JString> args(String* args) {
+    value l = JArrayList<JString>();
+    args.each((String arg) => l.add(JString(arg)));
     return l;
 }
 
@@ -90,7 +93,7 @@ void setupProxy(Vertx vertx, Router router) {
                     routingContext.response().end(statusMsg);
                 }
             } else {
-                routingContext.next ();
+                routingContext.next();
             }
         }
     });
@@ -107,32 +110,36 @@ void setupRoutes(Vertx vertx, Router router) {
     }
 */*/
     router.route().handler((RoutingContext ctx) {
-        ctx.response().headers().add("Access-Control-Allow-Origin", "*");
+        ctx.response().headers().set("Access-Control-Allow-Origin", "*");
         ctx.next();
     });
-    router.route("/ping").handler((RoutingContext ctx) {
+    router.post("/ping").handler((RoutingContext ctx) {
         log.info("Got requst ``ctx```");
-        ctx.response().setChunked(true);
-        value proc = Process.create(vertx, "ping", splitargs("-W 3 -c 1 www.hut.fi"));
-        proc.start((proc) {
-            log.debug("Proc started");
-        });
-        proc.stderr().exceptionHandler((Throwable t) {
-           log.error("ERR Exception", t);
-        });
-        proc.stderr().handler((Buffer buf) {
-           log.error(buf.toString("UTF-8"));
-        });
-        proc.stdout().exceptionHandler((Throwable t) {
-            log.error("OUT Exception", t);
-        });
-        proc.stdout().handler((Buffer buf) {
-            log.debug("Data ``buf.toString("UTF-8")``");
-            ctx.response().write(buf);
-        });
-        proc.exitHandler((JInteger exitValue) {
-            log.debug("Exited ``exitValue``");
-            ctx.response().end();
+        ctx.request().bodyHandler((Buffer buf) {
+            value json = buf.toJsonObject();
+            ctx.response().setChunked(true);
+            ctx.response().headers().set("Content-type", "text/plain;charset=UTF-8");
+            value proc = Process.create(vertx, "ping", args("-W", "3", "-c", "1", json.getString("host")));
+            proc.start((proc) {
+                log.debug("Proc started");
+            });
+            proc.stderr().exceptionHandler((Throwable t) {
+                log.error("ERR Exception", t);
+            });
+            proc.stderr().handler((Buffer buf) {
+                log.error(buf.toString("UTF-8"));
+            });
+            proc.stdout().exceptionHandler((Throwable t) {
+                log.error("OUT Exception", t);
+            });
+            proc.stdout().handler((Buffer buf) {
+                log.debug("Data ``buf.toString("UTF-8")``");
+                ctx.response().write(buf);
+            });
+            proc.exitHandler((JInteger exitValue) {
+                log.debug("Exited ``exitValue``");
+                ctx.response().end();
+            });
         });
     });
 }
