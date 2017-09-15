@@ -17,10 +17,6 @@ import ceylon.file {
     parsePath,
     File
 }
-import ceylon.interop.java {
-    javaClass,
-    javaClassFromInstance
-}
 import ceylon.logging {
     logger,
     Logger,
@@ -39,59 +35,21 @@ import ceylon.logging {
 import io.vertx.core {
     ...
 }
-import io.vertx.core.buffer {
-    Buffer
-}
 import io.vertx.core.http {
     ...
 }
-import io.vertx.core.streams {
-    ReadStream,
-    WriteStream
-}
 import io.vertx.ext.web {
-    Router,
-    RoutingContext
+    Router
 }
 
 import java.lang {
     JString=String,
-    System,
-    Void,
-    RuntimeException
-}
-import java.util {
-    Arrays
-}
-import java.util.\ifunction {
-    Supplier
+    System
 }
 
 import org.apache.logging.log4j {
     LogManager,
-    Level,
-    Log4jLogger=Logger,
-    Marker,
-    MarkerManager
-}
-import org.jboss.modules {
-    JBModule = Module
-}
-import org.jboss.modules.log {
-    StreamModuleLogger
-}
-import ceylon.language.meta.declaration {
-    Import,
-    CModule = Module
-}
-import ceylon.language.meta {
-    modules
-}
-import ceylon.collection {
-    MutableList,
-    ArrayList,
-    HashSet,
-    MutableSet
+    Level
 }
 
 shared Integer serverIdleTimeout = 300000;
@@ -104,7 +62,6 @@ shared void main() {
     //JBModule.moduleLogger = StreamModuleLogger(System.\ierr);
     setupLogging();
     log.info("Starting..");
-
 
     // TODO timeouts
     // TODO test responses without body e.g. 204
@@ -140,7 +97,7 @@ void setupLogging() {
     }
     System.setProperty("java.util.logging.manager", "org.apache.logging.log4j.jul.LogManager");
     System.setProperty("vertx.logger-delegate-factory-class-name", "io.vertx.core.logging.Log4j2LogDelegateFactory");
-    //logger = LogManager.hgetLogger(javaClass<NitorBackend>());
+    //logger = LogManager.getLogger(javaClass<NitorBackend>());
 }
 
 shared class MyVerticle() extends AbstractVerticle() {
@@ -149,12 +106,7 @@ shared class MyVerticle() extends AbstractVerticle() {
 
         value router = Router.router(vertx);
 
-        router.route().handler(object satisfies Handler<RoutingContext> {
-            shared actual void handle(RoutingContext ctx) {
-                log.info("Got requst ``ctx```");
-                ctx.response().end("Yeah");
-            }
-        });
+        setupRoutes(vertx, router);
 
         listen(router);
 
