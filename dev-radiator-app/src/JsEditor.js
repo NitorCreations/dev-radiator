@@ -10,7 +10,7 @@ export default class JsEditor extends Component {
   constructor() {
     super();
     this.state = {
-      code: "function foo(t) {\n  return (Math.sin(t*10000) + Math.sin(t*1000) + Math.sin(t*100) + Math.sin(t*10) + Math.sin(t) + Math.sin(t/10) + Math.sin(t/100) + Math.sin(t/1000)) / 16 + 0.5;\n}\n\nfunction SinFeedProvider() {\n}\n\nSinFeedProvider.prototype.schedule = function(min, max, samples, resolution, cb) {\n  console.log(\"SIN\", min, max, samples, resolution);\n  var handle = setTimeout(function() {\n    var keys = [];\n    var values = [];\n    for (var i=0; i<samples; ++i) {\n      var key = min + (max - min) * i / (samples - 1);\n      keys.push(key);\n      values.push(foo(key));\n    }\n    cb({\n      startTime: min,\n      endTime: max,\n      keys: keys,\n      values: values,\n      resolution: resolution, \n      valueMins: undefined,\n      valueMaxs: undefined,\n      isExact: function(idx, origIdx) { return false; }\n    });\n  }, 900);\n  return handle;\n};\n\nreturn SinFeedProvider;\n",
+      code: "import React, {Component} from 'react';\n\nexport default class Ping extends Component {\n  constructor() {\n    super();\n    this.state = {\n      data: \"n/a\",\n    };\n  }\n\n  componentDidMount() {\n    this.execute();\n  }\n\n  render() {\n    const na      = \"n/a\" === this.state.data;\n    const success = / \\d+ received/.test(this.state.data);\n    return <div className=\"signal\">\n      <p>\n        <span className={\"signal \" + (na ? \"signal-unknown\" : success ? \"signal-green\" : \"signal-red\")}/>\n        <span className=\"signal-label\">{this.props.label}</span>\n      </p>\n      {!na && <pre className=\"onhover\">{this.state.data}</pre>}\n    </div>;\n  }\n\n  execute() {\n    fetch('http://localhost:4333/ping', {\n      cache: 'no-cache',\n      method: 'POST',\n      body: JSON.stringify(\n        {\n          host: this.props.host,\n        }),\n    }).then(response => response.text())\n      .then(data => {\n        this.setState({data});\n        setTimeout(this.execute.bind(this), 5000);\n      }).catch(err => {\n      this.setState({data: \"n/a\"});\n    });\n  }\n}\n",
       cursorRow: 0,
       cursorCol: 0,
       eol: 0
@@ -20,7 +20,7 @@ export default class JsEditor extends Component {
   render() {
     return (
       <div>
-        <h1 onClick={this.onClickRun.bind(this)} className="button">Run code</h1>
+        <h3 onClick={this.onClickRun.bind(this)} className="button">Run code</h3>
         <div className="editor" ref={ref => this.myEditor = ref}/>
         <div className="editor">
           L{this.state.cursorRow + 1} C{this.state.cursorCol}

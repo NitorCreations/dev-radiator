@@ -120,17 +120,18 @@ void setupRoutes(Vertx vertx, Router router) {
             ctx.response().setChunked(true);
             ctx.response().headers().set("Content-type", "text/plain;charset=UTF-8");
             value proc = Process.create(vertx, "ping", args("-W", "3", "-c", "1", json.getString("host")));
-            proc.start((proc) {
-                log.debug("Proc started");
-            });
-            proc.stderr().exceptionHandler((Throwable t) {
-                log.error("ERR Exception", t);
-            });
+            void ioExceptionHandler(Throwable t) {
+                log.error("Process IO problem", t);
+                proc.kill(true);
+                ctx.response().end();
+            }
+            proc.stdin().exceptionHandler(ioExceptionHandler);
+            proc.stdout().exceptionHandler(ioExceptionHandler);
+            proc.stderr().exceptionHandler(ioExceptionHandler);
+            proc.stdin().end();
             proc.stderr().handler((Buffer buf) {
                 log.error(buf.toString("UTF-8"));
-            });
-            proc.stdout().exceptionHandler((Throwable t) {
-                log.error("OUT Exception", t);
+                ctx.response().write(buf);
             });
             proc.stdout().handler((Buffer buf) {
                 log.debug("Data ``buf.toString("UTF-8")``");
@@ -139,6 +140,9 @@ void setupRoutes(Vertx vertx, Router router) {
             proc.exitHandler((JInteger exitValue) {
                 log.debug("Exited ``exitValue``");
                 ctx.response().end();
+            });
+            proc.start((proc) {
+                log.debug("Proc started");
             });
         });
     });

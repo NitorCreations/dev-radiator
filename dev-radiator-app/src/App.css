@@ -1,11 +1,21 @@
-.App {
-    background: gray;
+.App, body {
+    background: #eeeeee;
     color: black;
+}
+
+.button { /* js editor */
+    border: 1px solid gray;
+    display: inline-block;
+    padding: 3px;
 }
 
 p,div {
     margin: 0;
     padding: 0;
+}
+
+button, select {
+    color: black;
 }
 
 .signal {

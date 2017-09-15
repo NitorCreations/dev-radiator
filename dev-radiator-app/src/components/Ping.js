@@ -41,3 +41,8 @@ export default class Ping extends Component {
     });
   }
 }
+
+Ping.propTypes = {
+  label: React.PropTypes.string.isRequired,
+  host: React.PropTypes.string.isRequired,
+};
