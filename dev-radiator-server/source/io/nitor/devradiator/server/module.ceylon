@@ -18,6 +18,8 @@
 native ("jvm")
 module io.nitor.devradiator.server "1.0.0" {
 
+    shared import maven:io.nitor.api:"backend" "1.9";
+
     //import maven:org.mortbay.jetty.alpn:"jetty-alpn-agent" "2.0.6";
     import maven:org.mortbay.jetty.alpn:"alpn-boot" "8.1.11.v20170118";
 // -javaagent:/home/xkr47/jonas/.m2/repository/org/mortbay/jetty/alpn/jetty-alpn-agent/2.0.6/jetty-alpn-agent-2.0.6.jar

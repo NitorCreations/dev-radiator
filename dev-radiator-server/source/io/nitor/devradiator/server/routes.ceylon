@@ -42,6 +42,14 @@ import java.util {
 import io.vertx.ext.web.handler {
     StaticHandler
 }
+import java.util.\ifunction {
+    Supplier
+}
+import io.nitor.api.backend.proxy {
+    Proxy,
+    DevNullProxyTracer,
+    ProxyTracer
+}
 
 JList<JString> splitargs(String s) {
     value l = JArrayList<JString>();
@@ -49,8 +57,59 @@ JList<JString> splitargs(String s) {
     return l;
 }
 
+void setupProxy(Vertx vertx, Router router) {
+    value client = vertx.createHttpClient(HttpClientOptions()
+        .setConnectTimeout(10)
+        .setIdleTimeout(120)
+        .setMaxPoolSize(1000)
+        .setPipelining(false)
+        .setPipeliningLimit(1)
+        .setMaxWaitQueueSize(20)
+        .setUsePooledBuffers(true)
+        .setProtocolVersion(HttpVersion.http11)
+        .setTryUseCompression(false)
+    );
+
+    object targetResolver satisfies Proxy.TargetResolver {
+        shared actual void resolveNextHop(RoutingContext routingContext, Handler<Proxy.Target> targetHandler) {
+            targetHandler.handle(Proxy.Target("localhost", 3000, routingContext.request().uri(), "localhost:3000"));
+        }
+    }
+    Proxy proxy = Proxy(client, targetResolver, serverIdleTimeout, 300, object satisfies Supplier<ProxyTracer> {
+        shared actual ProxyTracer get() => DevNullProxyTracer();
+    }, Proxy.DefaultPumpStarter());
+    router.route().handler(proxy.handle);
+    router.route().failureHandler(object satisfies Handler<RoutingContext> {
+        shared actual void handle(RoutingContext routingContext) {
+            if (routingContext.failed()) {
+                assert (is Proxy.ProxyException ex = routingContext.failure());
+                if (!routingContext.response().headWritten()) {
+                    value statusMsg = if (exists cause = ex.cause) then cause.message else (ex.reason == Proxy.RejectReason.noHostHeader then "Exhausted resources while trying to extract Host header from the request" else "");
+                    routingContext.response().setStatusCode(ex.statusCode);
+                    routingContext.response().headers().set("content-type", "text/plain;charset=UTF-8");
+                    routingContext.response().end(statusMsg);
+                }
+            } else {
+                routingContext.next ();
+            }
+        }
+    });
+}
+
+Boolean devMode = false;
+
 void setupRoutes(Vertx vertx, Router router) {
-    router.route("/").handler(StaticHandler.create("web"));
+    /*
+    if (devMode) {
+        setupProxy(vertx, router); // dev
+    } else {
+        router.route("/*").handler(StaticHandler.create("web"));
+    }
+*/*/
+    router.route().handler((RoutingContext ctx) {
+        ctx.response().headers().add("Access-Control-Allow-Origin", "*");
+        ctx.next();
+    });
     router.route("/ping").handler((RoutingContext ctx) {
         log.info("Got requst ``ctx```");
         ctx.response().setChunked(true);
