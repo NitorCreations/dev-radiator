@@ -13,6 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-"Default documentation for package `io.nitor.devopsradiator`."
+"Default documentation for package `io.nitor.devradiator.server`."
 
-shared package io.nitor.devopsradiator;
+shared package io.nitor.devradiator.server;

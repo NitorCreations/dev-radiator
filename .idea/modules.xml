@@ -2,7 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/devops-radiator.iml" filepath="$PROJECT_DIR$/devops-radiator.iml" />
+      <module fileurl="file://$PROJECT_DIR$/dev-radiator-app/dev-radiator-app.iml" filepath="$PROJECT_DIR$/dev-radiator-app/dev-radiator-app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/dev-radiator-server/dev-radiator-server.iml" filepath="$PROJECT_DIR$/dev-radiator-server/dev-radiator-server.iml" />
     </modules>
   </component>
 </project>

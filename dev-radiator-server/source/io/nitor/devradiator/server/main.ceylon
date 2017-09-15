@@ -57,7 +57,7 @@ shared Integer listenPort = 4333;
 
 Logger log = logger(`package`);
 
-"Run the module `io.nitor.devopsradiator`."
+"Run the module `io.nitor.devradiator.server`."
 shared void main() {
     //JBModule.moduleLogger = StreamModuleLogger(System.\ierr);
     setupLogging();

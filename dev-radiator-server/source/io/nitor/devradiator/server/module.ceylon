@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-"Default documentation for module `io.nitor.devopsradiator`."
+"Default documentation for module `io.nitor.devradiator.server`."
 
 native ("jvm")
-module io.nitor.devopsradiator "1.0.0" {
+module io.nitor.devradiator.server "1.0.0" {
 
     //import maven:org.mortbay.jetty.alpn:"jetty-alpn-agent" "2.0.6";
     import maven:org.mortbay.jetty.alpn:"alpn-boot" "8.1.11.v20170118";

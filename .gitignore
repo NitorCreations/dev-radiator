@@ -1,12 +1,3 @@
-/.exploded/
-/classes/
-/modules
-/.classpath
 *~
-/accessGroups.txt
-/logs
-/keystore
-/keystore-password
 /.idea/workspace.xml
 /.idea/tasks.xml
-/.acmemanager/

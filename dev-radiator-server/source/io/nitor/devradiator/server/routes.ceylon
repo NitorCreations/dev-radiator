@@ -39,6 +39,9 @@ import java.util {
     JList=List,
     JArrayList=ArrayList
 }
+import io.vertx.ext.web.handler {
+    StaticHandler
+}
 
 JList<JString> splitargs(String s) {
     value l = JArrayList<JString>();
@@ -47,7 +50,8 @@ JList<JString> splitargs(String s) {
 }
 
 void setupRoutes(Vertx vertx, Router router) {
-    router.route().handler((RoutingContext ctx) {
+    router.route("/").handler(StaticHandler.create("web"));
+    router.route("/ping").handler((RoutingContext ctx) {
         log.info("Got requst ``ctx```");
         ctx.response().setChunked(true);
         value proc = Process.create(vertx, "ping", splitargs("-W 3 -c 1 www.hut.fi"));
