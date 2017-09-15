@@ -1,0 +1,2 @@
+/source/io/nitor/**/*.java	licensefile=.githooks/license-maintainer/LICENSE-javadoc
+/source/io/nitor/**/*.ceylon	licensefile=.githooks/license-maintainer/LICENSE-javadoc
