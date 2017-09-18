@@ -33,7 +33,8 @@ import io.vertx.core.http {
 }
 import io.vertx.ext.web {
     Router,
-    RoutingContext
+    RoutingContext,
+    Route
 }
 
 import java.lang {
@@ -60,7 +61,7 @@ JList<JString> args(String* args) {
     return l;
 }
 
-void setupProxy(Vertx vertx, Router router) {
+void setupReverseProxy(Vertx vertx, Router router) {
     value client = vertx.createHttpClient(HttpClientOptions()
         .setConnectTimeout(10)
         .setIdleTimeout(120)
@@ -99,12 +100,79 @@ void setupProxy(Vertx vertx, Router router) {
     });
 }
 
+void remoteFetchHandler(Vertx vertx, Route route) {
+    value client = vertx.createHttpClient(HttpClientOptions()
+        .setConnectTimeout(10)
+        .setIdleTimeout(120)
+        .setMaxPoolSize(1000)
+        .setPipelining(false)
+        .setPipeliningLimit(1)
+        .setMaxWaitQueueSize(20)
+        .setUsePooledBuffers(true)
+        .setProtocolVersion(HttpVersion.http11)
+        .setTryUseCompression(false)
+    );
+
+    object targetResolver satisfies Proxy.TargetResolver {
+        shared actual void resolveNextHop(RoutingContext routingContext, Handler<Proxy.Target> targetHandler) {
+            value req = routingContext.request();
+            value hdrs = req.headers();
+            String? take(String hdr) {
+                value val = hdrs.get(hdr);
+                hdrs.remove(hdr);
+                return val;
+            }
+            assert(exists protocol = take("X-next-protocol")); // TODO
+            assert(exists host = take("X-next-host"));
+            assert(exists portStr = take("X-next-port"));
+            Integer port = parseInteger(portStr) else (protocol == "https:" then 443 else 80);
+            assert(exists uri = take("X-next-uri"));
+            hdrs.remove("Origin");
+            hdrs.remove("Referer");
+            hdrs.remove("If-None-Match");
+            if (exists referer = take("X-next-referer")) {
+                hdrs.set("Referer", referer);
+            }
+            targetHandler.handle(Proxy.Target(host, port, uri, hdrs.get("Host")));
+        }
+    }
+    Proxy proxy = Proxy(client, targetResolver, serverIdleTimeout, 30, object satisfies Supplier<ProxyTracer> {
+        shared actual ProxyTracer get() => DevNullProxyTracer();
+    }, Proxy.DefaultPumpStarter());
+    route.handler((RoutingContext ctx) {
+        if (ctx.request().method() == HttpMethod.options) {
+            value reqHdrs = ctx.request().headers();
+            value hdrs = ctx.response().headers();
+            hdrs.set("Access-Control-Allow-Methods", "OPTIONS, GET, HEAD, POST, PUT, DELETE, TRACE, CONNECT, PATCH" + (if (exists m = reqHdrs.get("Access-Control-Request-Method")) then ", " + m else ""));
+            hdrs.set("Access-Control-Allow-Headers", reqHdrs.get("Access-Control-Request-Headers"));
+            ctx.response().end();
+            return;
+        }
+        proxy.handle(ctx);
+    });
+    route.failureHandler(object satisfies Handler<RoutingContext> {
+        shared actual void handle(RoutingContext routingContext) {
+            if (routingContext.failed()) {
+                assert (is Proxy.ProxyException ex = routingContext.failure());
+                if (!routingContext.response().headWritten()) {
+                    value statusMsg = if (exists cause = ex.cause) then cause.message else (ex.reason == Proxy.RejectReason.noHostHeader then "Exhausted resources while trying to extract Host header from the request" else "");
+                    routingContext.response().setStatusCode(ex.statusCode);
+                    routingContext.response().headers().set("content-type", "text/plain;charset=UTF-8");
+                    routingContext.response().end(statusMsg);
+                }
+            } else {
+                routingContext.next();
+            }
+        }
+    });
+}
+
 Boolean devMode = false;
 
 void setupRoutes(Vertx vertx, Router router) {
     /*
     if (devMode) {
-        setupProxy(vertx, router); // dev
+        setupReverseProxy(vertx, router); // dev
     } else {
         router.route("/*").handler(StaticHandler.create("web"));
     }
@@ -146,4 +214,6 @@ void setupRoutes(Vertx vertx, Router router) {
             });
         });
     });
+
+    remoteFetchHandler(vertx, router.route("/remoteFetch"));
 }
