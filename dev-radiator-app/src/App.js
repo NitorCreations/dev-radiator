@@ -29,7 +29,7 @@ const components = {
   },
   RemoteFetch: {
     component: RemoteFetch,
-    defaultProps: {label: "test", url: "http://localhost:3000/", expectedContent: /success/, expectedStatus: 200},
+    defaultProps: {label: "test", url: "http://localhost:3000/", expectedContent: /manifest/, expectedStatus: 200},
   },
 };
 

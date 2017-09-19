@@ -43,16 +43,20 @@ export default class RemoteFetch extends Component {
   execute() {
     const expectedStatus = this.props.expectedStatus || 200;
     const expectedContent = this.props.expectedContent;
-    this.remoteFetch("http://localhost:3000/").then(res => {
-      const ok = res.status === expectedStatus && (typeof expectedContent === "string" ? res.text() === expectedContent : expectedContent.test(res.text()));
-      this.setState({
-                      success: ok,
-                      response: this.dumpRes(res),
-                    });
-      setTimeout(this.execute.bind(this), 5000);
+    this.remoteFetch(this.props.url).then(res => {
+      return res.text().then(resText => {
+        const ok = res.status === expectedStatus && (
+          typeof expectedContent === "string" ? resText === expectedContent :
+            typeof expectedContent === "function" ? expectedContent(resText) :
+              expectedContent.test(resText)); // Regex
+        this.setState({
+                        success: ok,
+                        response: this.dumpRes(res, resText),
+                      });
+      });
     }).catch(err => {
       this.setState({success: null, response: "-"});
-    });
+    }).then(() => setTimeout(this.execute.bind(this), 5000));
   }
 
   remoteFetch(url, options) {
@@ -65,11 +69,11 @@ export default class RemoteFetch extends Component {
     headers.set("X-next-uri", parsedUrl.pathname + parsedUrl.query);
     options.cache = 'no-cache';
     console.log(headers);
-    return fetch('http://localhost:4333/remoteFetch', options);
+    return fetch('http://localhost:4333/remoteFetch', options); // TODO use XHR to be able to specify timeout
   }
 
-  dumpRes(res) {
-    return res.status + " " + res.statusText + "\n" + this.dumpHeaders(res) + res.text();
+  dumpRes(res, resText) {
+    return res.status + " " + res.statusText + "\n" + this.dumpHeaders(res) + "\n" + resText;
   }
 
   dumpHeaders(res) {
@@ -79,6 +83,7 @@ export default class RemoteFetch extends Component {
 
 RemoteFetch.propTypes = {
   label: React.PropTypes.string.isRequired,
-  expectedContent: React.PropTypes.any.isRequired,
-  expectedStatus: React.PropTypes.string,
+  url: React.PropTypes.string.isRequired,
+  expectedContent: React.PropTypes.any.isRequired, // TODO
+  expectedStatus: React.PropTypes.number,
 };

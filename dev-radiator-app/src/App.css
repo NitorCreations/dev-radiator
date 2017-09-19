@@ -60,7 +60,7 @@ button, select {
     border: 1px solid black;
     padding: 2px;
     background: rgba(200,200,200,0.8);
-    z-index: 1;
+    z-index: 10;
 }
 
 *:hover > .onhover {
