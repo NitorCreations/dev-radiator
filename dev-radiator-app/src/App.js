@@ -18,7 +18,6 @@ import './App.css';
 import Ping from './components/Ping';
 import JsEditor from './JsEditor';
 //import foo from './components/*.js';
-import path from 'path';
 import _ from 'underscore';
 import RemoteFetch from './components/RemoteFetch';
 
@@ -29,7 +28,7 @@ const components = {
   },
   RemoteFetch: {
     component: RemoteFetch,
-    defaultProps: {label: "test", url: "http://localhost:3000/", expectedContent: /manifest/, expectedStatus: 200},
+    defaultProps: {label: "test", url: "http://localhost:3000/", expectedContent: /Dev Radiator/, expectedStatus: 200},
   },
 };
 

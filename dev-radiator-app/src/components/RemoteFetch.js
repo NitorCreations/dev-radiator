@@ -36,7 +36,7 @@ export default class RemoteFetch extends Component {
         <span className={"signal " + (success ? "signal-green" : success === false ? "signal-red" : "signal-unknown")}/>
         <span className="signal-label">{this.props.label}</span>
       </p>
-      {success !== null && <pre className="onhover">{this.state.response}</pre>}
+      {this.state.response && <pre className="onhover">{this.state.response}</pre>}
     </div>;
   }
 
@@ -47,7 +47,7 @@ export default class RemoteFetch extends Component {
       return res.text().then(resText => {
         const ok = res.status === expectedStatus && (
           typeof expectedContent === "string" ? resText === expectedContent :
-            typeof expectedContent === "function" ? expectedContent(resText) :
+            typeof expectedContent === "function" ? expectedContent(resText, res) :
               expectedContent.test(resText)); // Regex
         this.setState({
                         success: ok,
@@ -55,7 +55,9 @@ export default class RemoteFetch extends Component {
                       });
       });
     }).catch(err => {
-      this.setState({success: null, response: "-"});
+      //console.log(err);
+      // TODO success=null if server does not respond
+      this.setState({success: false, response: "" + err});
     }).then(() => setTimeout(this.execute.bind(this), 5000));
   }
 
@@ -68,7 +70,6 @@ export default class RemoteFetch extends Component {
     headers.set("X-next-port", parsedUrl.port);
     headers.set("X-next-uri", parsedUrl.pathname + parsedUrl.query);
     options.cache = 'no-cache';
-    console.log(headers);
     return fetch('http://localhost:4333/remoteFetch', options); // TODO use XHR to be able to specify timeout
   }
 
